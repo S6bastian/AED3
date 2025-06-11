@@ -1,5 +1,10 @@
 #include <iostream>
 #include <stack>
+#include <list>
+#include <string>
+#include <iterator> // For std::prev
+#include <math.h>
+
 using namespace std;
 
 template<class T>
@@ -47,7 +52,7 @@ struct AVLTree{
 	}
 		
 	bool find(T v, Node<T>**& p, stack<Node<T>**>& backtrack){
-		for(p = &root; *p && (*p)->value; backtrack.push(p), p = &(*p)->next[(*p)->value < v]);
+		for(p = &root; *p && (*p)->value != v; backtrack.push(p), p = &(*p)->next[(*p)->value < v]);
 		return *p;
 	}
 		
@@ -91,6 +96,7 @@ struct AVLTree{
 			update_height(*backtrack.top());
 			backtrack.pop();
 		}
+		return true;
 	}
 		
 	bool remove(T v){
@@ -110,11 +116,84 @@ struct AVLTree{
 			update_height(*backtrack.top());
 			backtrack.pop();
 		}
+		return true;
+	}
+		
+		
+	void bfs(list<Node<T>*>*& lvlNodes) {
+		list<Node<T>*>* newList = new list<Node<T>*>;
+		
+		for (Node<T>* current; !lvlNodes->empty(); lvlNodes->pop_front()) {
+			current = lvlNodes->front();
+			
+			if (current) {
+				newList->push_back(current->next[0]);
+				newList->push_back(current->next[1]);
+			}
+			else {
+				newList->push_back(nullptr);
+				newList->push_back(nullptr);
+			}
+			
+		}
+		delete lvlNodes;
+		lvlNodes = newList;
+		
+	}
+		
+	void print() {
+		if (root == nullptr) {
+			cout << "Empty Tree" << endl;
+			return;
+		}
+		
+		list<Node<T>*>* lvlNodes = new list<Node<T>*>;
+		lvlNodes->push_back(root);
+		cout << "-print()-" << endl;
+		int digits = 3;
+		
+		for (int height = lvlNodes->front()->height, margin, space; height > 0; height--) {
+			
+			margin = (pow(2, height - 1) - 1) * digits;
+			for (int i = 0; i < margin; i++) cout << " ";
+			
+			space = (pow(2, height) - 1) * 3;
+			for (auto place = lvlNodes->begin(); place != lvlNodes->end(); ++place) {
+				int offSpace = digits - ((*place) ? to_string((*place)->value).length() : 1);
+				for (; offSpace > 0; cout << " ", --offSpace);
+				
+				if (*place)
+					cout << (*place)->value;
+				else
+					cout << "N";
+				
+				if (place != prev(lvlNodes->end())) {
+					for (int j = 0; j < space; j++) cout << " ";
+				}
+			}
+			
+			cout << endl;
+			
+			if (height != 1)
+				bfs(lvlNodes);  // updates node queue
+		}
+		
+		cout << endl;
 	}
 	
 };
 
 int main() {
+	AVLTree<int> Test;
+	for(int i = 100; i <= 200; i+=10) Test.insert(i);
+	Test.print();
+	
+	for(int i = 100; i >= 0; i-=10) {
+		Test.insert(i);
+		cout << i << "\n";
+		Test.print();
+	}
+	Test.print();
 	
 	return 0;
 }
